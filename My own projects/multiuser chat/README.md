@@ -1,2 +1,2 @@
 # Multi-user-chat
-## my school project
+## my school project for this year
