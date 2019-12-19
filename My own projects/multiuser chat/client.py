@@ -1,6 +1,6 @@
 import socket
-import _thread
-import threading
+from _thread import *
+from threading import Thread
 
 
 def main():
