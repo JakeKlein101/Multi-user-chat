@@ -13,7 +13,7 @@ class Message:
         self._message = message
 
     def __str__(self):
-        print(f"The author is: {self._author}. The Message is: {self._message}")
+        return f"The author is: {self._author}. The Message is: {self._message}"
 
 
 class Room:
@@ -21,9 +21,11 @@ class Room:
         self._client_list = []
 
     def __str__(self):
-        print("The clients in this room are: ")
+        output = ""
+        output += "The clients in this room are: "
         for x in self._client_list:
-            print(x)
+            output += x
+        return output
 
 
 class Client:
@@ -36,7 +38,7 @@ class Client:
         message = Message(received_content[0], received_content[1])
 
     def __str__(self):
-        print(self._client_address)
+        return f"IP: {self._client_address}"
 
 
 class Server:
@@ -49,17 +51,22 @@ class Server:
     def bind_server(self):
             self._sock.bind((self._address, self._port))
             self._sock.listen(1)
+            print(f"Server has been binded to the IP: {self._address} port: {self._port}")
 
     def start_accepting(self):
+        print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
             print(f"connected to {client_address}")
             client = Client(client_socket, client_address)
+            print(client)
+            client.start()
 
 
 def main():
     my_server = Server(IP_ADDRESS, PORT)
     my_server.bind_server()
+    my_server.start_accepting()
 
 
 if __name__ == '__main__':
