@@ -1,6 +1,5 @@
 import socket
 import pickle
-from _thread import *
 from threading import Thread
 
 IP_ADDRESS = "127.0.0.1"

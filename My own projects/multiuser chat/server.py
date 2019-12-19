@@ -1,9 +1,9 @@
 import socket
 import pickle
-from _thread import *
 from threading import Thread
+import sys
 
-IP_ADDRESS = "127.0.0.1"
+IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
 PORT = 8820
 BUFFER_SIZE = 4096
 
@@ -29,15 +29,17 @@ class Room:
         return output
 
 
-class Client:
+class Client(Thread):
     def __init__(self, sock, ip):
+        Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
 
-    def start(self):
-        received_content = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
-        message = Message(received_content[1], received_content[2])
-        print(message)
+    def receive_messages(self):
+        while True:
+            received_content = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
+            message = Message(received_content[1], received_content[2])
+            print(message)
 
     def __str__(self):
         return f"IP: {self._client_address}"
@@ -63,6 +65,8 @@ class Server:
             client = Client(client_socket, client_address)
             print(client)
             client.start()
+
+
 
 
 def main():
