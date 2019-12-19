@@ -1,6 +1,7 @@
 import socket
-# from _thread import *
-# from threading import Thread
+import pickle
+from _thread import *
+from threading import Thread
 
 IP_ADDRESS = "127.0.0.1"
 PORT = 8820
@@ -34,8 +35,9 @@ class Client:
         self._client_address = ip
 
     def start(self):
-        received_content = self._client_sock.recv(BUFFER_SIZE)
-        message = Message(received_content[0], received_content[1])
+        received_content = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
+        message = Message(received_content[1], received_content[2])
+        print(message)
 
     def __str__(self):
         return f"IP: {self._client_address}"
