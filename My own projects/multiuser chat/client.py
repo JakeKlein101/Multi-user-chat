@@ -26,6 +26,7 @@ class Client:
 
     def start(self):
         self._sock.connect((IP_ADDRESS, PORT))
+        self._sock.send(self._name.encode())
 
     def start_requesting(self):
         print("would you like to:")

@@ -42,15 +42,12 @@ class Client(Thread):
         self.receive_messages()
 
     def receive_messages(self):
-        done = False
+        name = self._client_sock.recv(BUFFER_SIZE).decode()
+        print(f"{name} just connected to this room! Be nice and say hi")
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
             message = Message(received_content[1], received_content[2])
-            while not done:  # emulates Do while
-                print(f"{message.get_author()} just connected to this room! Be nice and say hi")
-                break
-            done = True
             print(message)
 
     def __str__(self):
