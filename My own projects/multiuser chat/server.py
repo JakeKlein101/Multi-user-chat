@@ -33,10 +33,11 @@ class Room:
 
 
 class Client(Thread):
-    def __init__(self, sock, ip):
+    def __init__(self, sock, ip, other_client_list):
         Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
+        self._other_clients_list = other_client_list
 
     def run(self):
         self.receive_messages()
@@ -60,6 +61,7 @@ class Server:
         self._port = port
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._room_list = []
+        self._client_socket_list = []
 
     def bind_server(self):
             self._sock.bind((self._address, self._port))
@@ -70,7 +72,8 @@ class Server:
         print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
-            client = Client(client_socket, client_address)
+            self._client_socket_list.append(client_socket)
+            client = Client(client_socket, client_address, self._client_socket_list)
             client.start()
 
 
