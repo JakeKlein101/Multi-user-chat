@@ -39,10 +39,11 @@ class Client(Thread):
         self.receive_messages()
 
     def receive_messages(self):
-        # while True:
-        received_content = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
-        message = Message(received_content[1], received_content[2])
-        print(message)
+        while True:
+            encoded_content = self._client_sock.recv(BUFFER_SIZE)
+            received_content = pickle.loads(encoded_content)
+            message = Message(received_content[1], received_content[2])
+            print(message)
 
     def __str__(self):
         return f"IP: {self._client_address}"
