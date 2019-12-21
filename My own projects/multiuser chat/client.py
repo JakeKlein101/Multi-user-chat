@@ -32,7 +32,7 @@ class Client:
         print("1 - join room")
         print("2 - create room")
         self._request_code = int(input())
-        print("Welcome to the room!")
+        print("Welcome to the room! you can start talking with your friends here:")
         while True:
             content = input()
             message = Message(self._request_code, self._name, content)

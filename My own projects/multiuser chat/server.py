@@ -13,8 +13,11 @@ class Message:
         self._author = author
         self._message = message
 
+    def get_author(self):
+        return self._author
+
     def __str__(self):
-        return f"The author is: {self._author}. The Message is: {self._message}"
+        return f"{self._author}: {self._message}"
 
 
 class Room:
@@ -39,10 +42,15 @@ class Client(Thread):
         self.receive_messages()
 
     def receive_messages(self):
+        done = False
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
             message = Message(received_content[1], received_content[2])
+            while not done:  # emulates Do while
+                print(f"{message.get_author()} just connected to this room! Be nice and say hi")
+                break
+            done = True
             print(message)
 
     def __str__(self):
@@ -65,12 +73,8 @@ class Server:
         print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
-            print(f"connected to {client_address}")
             client = Client(client_socket, client_address)
-            print(client)
             client.start()
-
-
 
 
 def main():
