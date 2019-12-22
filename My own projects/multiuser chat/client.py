@@ -3,6 +3,7 @@ import pickle
 import sys
 from threading import Thread
 
+
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
 PORT = 8820
 BUFFER_SIZE = 4096
@@ -33,11 +34,13 @@ class Client:
         self.start_requesting()
 
     def receiving(self):
+        print("in recv")
         received = pickle.loads(self._sock.recv(BUFFER_SIZE))
         received_message = Message(*received)
         print(received_message)
 
     def sending(self):
+        print("in send")
         content = input()
         message = Message(self._request_code, self._name, content)
         self._sock.send(pickle.dumps(message.generate_message()))
@@ -50,9 +53,11 @@ class Client:
         print("Welcome to the room! you can start talking with your friends here:")
         recv_thread = Thread(target=self.receiving())
         send_thread = Thread(target=self.sending())
-        while True:
-            recv_thread.start()
-            send_thread.start()
+        send_thread.start()
+        recv_thread.start()
+        recv_thread.join()
+        send_thread.join()
+        # while True:
 
 
 def main():
