@@ -51,6 +51,11 @@ class Client(Thread):
     def run(self):
         self.receive_messages()
 
+    def send_messages(self, message):
+        for x in self._other_clients_list:
+            if x.get_id() != self._id:
+                x.get_sock().send(pickle.dumps(message.generate_message()))
+
     def receive_messages(self):
         name = self._client_sock.recv(BUFFER_SIZE).decode()
         print(f"{name} just connected to this room! Be nice and say hi")
@@ -59,11 +64,9 @@ class Client(Thread):
             received_content = pickle.loads(encoded_content)
             message = Message(*received_content)
             print(message)
+            self.send_messages(message)
             for x in self._other_clients_list:
                 print(x)
-            for x in self._other_clients_list:
-                if x.get_id() != self._id:
-                    x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def __str__(self):
         return f"IP: {self._client_address}, ID: {self._id}"
