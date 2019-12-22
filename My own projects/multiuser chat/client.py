@@ -17,6 +17,9 @@ class Message:
     def generate_message(self):
         return tuple([self._request_code, self._author, self._content])
 
+    def __str__(self):
+        return f"{self._author}: {self._content}"
+
 
 class Client:
     def __init__(self, name):
@@ -38,6 +41,9 @@ class Client:
             content = input()
             message = Message(self._request_code, self._name, content)
             self._sock.send(pickle.dumps(message.generate_message()))
+            received = pickle.loads(self._sock.recv(BUFFER_SIZE))
+            received_message = Message(*received)
+            print(received_message)
 
 
 def main():

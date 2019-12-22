@@ -2,6 +2,7 @@ import socket
 import pickle
 from threading import Thread
 import sys
+import random
 
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
 PORT = 8820
@@ -9,15 +10,16 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, author, message):
+    def __init__(self, request_code, author, content):
         self._author = author
-        self._message = message
+        self._content = content
+        self._request_code = request_code
 
-    def get_author(self):
-        return self._author
+    def generate_message(self):
+        return tuple([self._request_code, self._author, self._content])
 
     def __str__(self):
-        return f"{self._author}: {self._message}"
+        return f"{self._author}: {self._content}"
 
 
 class Room:
@@ -33,11 +35,18 @@ class Room:
 
 
 class Client(Thread):
-    def __init__(self, sock, ip, other_client_list):
+    def __init__(self, sock, ip, other_clients_list):
         Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
-        self._other_clients_list = other_client_list
+        self._id = random.randint(0, 200000)
+        self._other_clients_list = other_clients_list
+
+    def get_id(self):
+        return self._id
+
+    def get_sock(self):
+        return self._client_sock
 
     def run(self):
         self.receive_messages()
@@ -48,11 +57,14 @@ class Client(Thread):
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
-            message = Message(received_content[1], received_content[2])
+            message = Message(*received_content)
             print(message)
+            for x in self._other_clients_list:
+                if x.get_id() != self._id:
+                    x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def __str__(self):
-        return f"IP: {self._client_address}"
+        return f"IP: {self._client_address}, ID: {self._id}"
 
 
 class Server:
@@ -61,7 +73,7 @@ class Server:
         self._port = port
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._room_list = []
-        self._client_socket_list = []
+        self._client_list = []
 
     def bind_server(self):
             self._sock.bind((self._address, self._port))
@@ -72,8 +84,8 @@ class Server:
         print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
-            self._client_socket_list.append(client_socket)
-            client = Client(client_socket, client_address, self._client_socket_list)
+            client = Client(client_socket, client_address, self._client_list)
+            self._client_list.append(client)
             client.start()
 
 
