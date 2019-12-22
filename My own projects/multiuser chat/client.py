@@ -1,7 +1,7 @@
 import socket
 import pickle
-from threading import Thread
 import sys
+from threading import Thread
 
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
 PORT = 8820
@@ -30,6 +30,17 @@ class Client:
     def start(self):
         self._sock.connect((IP_ADDRESS, PORT))
         self._sock.send(self._name.encode())
+        self.start_requesting()
+
+    def receiving(self):
+        received = pickle.loads(self._sock.recv(BUFFER_SIZE))
+        received_message = Message(*received)
+        print(received_message)
+
+    def sending(self):
+        content = input()
+        message = Message(self._request_code, self._name, content)
+        self._sock.send(pickle.dumps(message.generate_message()))
 
     def start_requesting(self):
         print("would you like to:")
@@ -37,13 +48,12 @@ class Client:
         print("2 - create room")
         self._request_code = int(input())
         print("Welcome to the room! you can start talking with your friends here:")
+        content = input()
+        message = Message(self._request_code, self._name, content)
+        self._sock.send(pickle.dumps(message.generate_message()))
         while True:
-            content = input()
-            message = Message(self._request_code, self._name, content)
-            self._sock.send(pickle.dumps(message.generate_message()))
-            received = pickle.loads(self._sock.recv(BUFFER_SIZE))
-            received_message = Message(*received)
-            print(received_message)
+            self.sending()
+            self.receiving()
 
 
 def main():
@@ -52,7 +62,6 @@ def main():
     print(f"Welcome {client_name}!")
     client = Client(client_name)
     client.start()
-    client.start_requesting()
 
 
 if __name__ == '__main__':

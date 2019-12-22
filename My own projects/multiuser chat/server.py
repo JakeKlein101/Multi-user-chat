@@ -60,6 +60,8 @@ class Client(Thread):
             message = Message(*received_content)
             print(message)
             for x in self._other_clients_list:
+                print(x)
+            for x in self._other_clients_list:
                 if x.get_id() != self._id:
                     x.get_sock().send(pickle.dumps(message.generate_message()))
 
