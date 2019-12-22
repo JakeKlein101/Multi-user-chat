@@ -48,12 +48,11 @@ class Client:
         print("2 - create room")
         self._request_code = int(input())
         print("Welcome to the room! you can start talking with your friends here:")
-        content = input()
-        message = Message(self._request_code, self._name, content)
-        self._sock.send(pickle.dumps(message.generate_message()))
+        recv_thread = Thread(target=self.receiving())
+        send_thread = Thread(target=self.sending())
         while True:
-            self.sending()
-            self.receiving()
+            recv_thread.start()
+            send_thread.start()
 
 
 def main():
