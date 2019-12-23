@@ -34,16 +34,18 @@ class Client:
         self.start_requesting()
 
     def receiving(self):
-        print("in recv")
-        received = pickle.loads(self._sock.recv(BUFFER_SIZE))
-        received_message = Message(*received)
-        print(received_message)
+        while True:
+            print("in recv")
+            received = pickle.loads(self._sock.recv(BUFFER_SIZE))
+            received_message = Message(*received)
+            print(received_message)
 
     def sending(self):
-        print("in send")
-        content = input()
-        message = Message(self._request_code, self._name, content)
-        self._sock.send(pickle.dumps(message.generate_message()))
+        while True:
+            print("in send")
+            content = input()
+            message = Message(self._request_code, self._name, content)
+            self._sock.send(pickle.dumps(message.generate_message()))
 
     def start_requesting(self):
         print("would you like to:")
@@ -51,13 +53,12 @@ class Client:
         print("2 - create room")
         self._request_code = int(input())
         print("Welcome to the room! you can start talking with your friends here:")
-        recv_thread = Thread(target=self.receiving())
-        send_thread = Thread(target=self.sending())
-        send_thread.start()
+        recv_thread = Thread(target=self.receiving)
+        send_thread = Thread(target=self.sending)
         recv_thread.start()
+        send_thread.start()
         recv_thread.join()
         send_thread.join()
-        # while True:
 
 
 def main():

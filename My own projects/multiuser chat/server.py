@@ -49,7 +49,10 @@ class Client(Thread):
         return self._client_sock
 
     def run(self):
-        self.receive_messages()
+        try:
+            self.receive_messages()
+        except ConnectionResetError:
+            print("Connection was forcibly closed")
 
     def send_messages(self, message):
         for x in self._other_clients_list:
