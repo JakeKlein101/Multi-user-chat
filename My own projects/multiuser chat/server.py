@@ -68,8 +68,6 @@ class Client(Thread):
             message = Message(*received_content)
             print(message)
             self.send_messages(message)
-            for x in self._other_clients_list:
-                print(x)
 
     def __str__(self):
         return f"IP: {self._client_address}, ID: {self._id}"

@@ -35,14 +35,12 @@ class Client:
 
     def receiving(self):
         while True:
-            print("in recv")
             received = pickle.loads(self._sock.recv(BUFFER_SIZE))
             received_message = Message(*received)
             print(received_message)
 
     def sending(self):
         while True:
-            print("in send")
             content = input()
             message = Message(self._request_code, self._name, content)
             self._sock.send(pickle.dumps(message.generate_message()))
