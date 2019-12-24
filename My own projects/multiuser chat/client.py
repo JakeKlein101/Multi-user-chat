@@ -10,13 +10,14 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, request_code, author, content):
+    def __init__(self, request_code, author, content, room_code=0):
         self._request_code = request_code
         self._author = author
         self._content = content
+        self._room_code = room_code
 
     def generate_message(self):
-        return tuple([self._request_code, self._author, self._content])
+        return tuple([self._request_code, self._author, self._content, self._room_code])
 
     def __str__(self):
         return f"{self._author}: {self._content}"
@@ -40,9 +41,11 @@ class Client:
             print(received_message)
 
     def sending(self):
+        room_code = 0
         while True:
             content = input()
-            message = Message(self._request_code, self._name, content)
+            message = Message(self._request_code, self._name, content, room_code)
+            self._request_code = 0
             self._sock.send(pickle.dumps(message.generate_message()))
 
     def start_requesting(self):

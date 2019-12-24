@@ -10,27 +10,46 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, request_code, author, content):
+    def __init__(self, request_code, author, content, room_code=0):
         self._author = author
         self._content = content
         self._request_code = request_code
+        self._room_code = room_code
+
+    def get_request(self):
+        return self._request_code
+
+    def get_room_code(self):
+        return self._room_code
 
     def generate_message(self):
-        return tuple([self._request_code, self._author, self._content])
+        return tuple([self._request_code, self._author, self._content, self._room_code])
 
     def __str__(self):
         return f"{self._author}: {self._content}"
 
 
 class Room:
-    def __init__(self):
+    def __init__(self, room_id):
         self._client_list = []
+        self._room_id = room_id
+
+    def get_room_id(self):
+        return self._room_id
+
+    def append_to_room(self, client):
+        self._client_list.append(client)
+
+    def send_to_room_mates(self):
+        for x in self._client_list:
+            x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def __str__(self):
         output = ""
         output += "The clients in this room are: "
         for x in self._client_list:
             output += x
+            output += " -> "
         return output
 
 
@@ -41,6 +60,7 @@ class Client(Thread):
         self._client_address = ip
         self._id = random.randint(0, 200000)
         self._other_clients_list = other_clients_list
+        self._room_id = 0
 
     def get_id(self):
         return self._id
@@ -93,6 +113,12 @@ class Server:
             client = Client(client_socket, client_address, self._client_list)
             self._client_list.append(client)
             client.start()
+
+    def append_to_room_list(self, room):
+        self._room_list.append(room)
+
+    def get_room_list(self):
+        return self._room_list
 
 
 def main():
