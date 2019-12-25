@@ -10,7 +10,7 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, request_code, author, content, room_code=0):
+    def __init__(self, request_code, author="", content="", room_code=0):
         self._author = author
         self._content = content
         self._request_code = request_code
@@ -86,21 +86,24 @@ class Client(Thread):
                 x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def receive_messages(self):
+        initial_packet = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
+        initial_info = Message(*initial_packet)
+        if initial_info.get_request() == 2:
+            room = Room(initial_info.get_room_code(), self)
+            room.start()
+            self._room = room
+            self._host.update_room_list(room)
+            for x in self._host.get_room_list():  # testing
+                print(x)
+        elif initial_info.get_request() == 1:
+            for x in self._host.get_room_list():
+                if x.get_room_id() == initial_info.get_room_code():
+                    x.append_to_room(self)
+                    self._room = x
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
             message = Message(*received_content)
-            if message.get_request() == 2:
-                room = Room(message.get_room_code(), self)
-                room.start()
-                self._room = room
-                self._host.update_room_list(room)
-            elif message.get_request() == 1:
-                for x in self._host.get_room_list():
-                    if x.get_room_id() == message.get_room_code():
-                        x.append_to_room(self)
-                        self._room = x
-            print(self._room)
             self.send_messages(message)
 
     def __str__(self):
@@ -131,6 +134,7 @@ class Server:
         print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
+            print(f"{client_address} just connected")
             client = Client(client_socket, client_address, self._client_list, self)
             self._client_list.append(client)
             client.start()
