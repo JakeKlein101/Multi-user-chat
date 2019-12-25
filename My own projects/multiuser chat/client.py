@@ -31,14 +31,16 @@ class Client:
 
     def start(self):
         self._sock.connect((IP_ADDRESS, PORT))
-        self._sock.send(self._name.encode())
         self.start_requesting()
 
     def receiving(self):
-        while True:
-            received = pickle.loads(self._sock.recv(BUFFER_SIZE))
-            received_message = Message(*received)
-            print(received_message)
+        try:
+            while True:
+                received = pickle.loads(self._sock.recv(BUFFER_SIZE))
+                received_message = Message(*received)
+                print(received_message)
+        except ConnectionResetError:
+            print("The server crashed")
 
     def sending(self):
         room_code = 0

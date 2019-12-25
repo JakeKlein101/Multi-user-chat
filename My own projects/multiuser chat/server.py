@@ -80,8 +80,6 @@ class Client(Thread):
                 x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def receive_messages(self):
-        name = self._client_sock.recv(BUFFER_SIZE).decode()
-        print(f"{name} just connected to this room! Be nice and say hi")
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
@@ -94,17 +92,18 @@ class Client(Thread):
 
 
 class Server:
-    def __init__(self, ip, port):
-        self._address = ip
-        self._port = port
+    def __init__(self):
+        self._address = IP_ADDRESS
+        self._port = PORT
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._room_list = []
         self._client_list = []
 
-    def bind_server(self):
+    def start(self):
             self._sock.bind((self._address, self._port))
             self._sock.listen(1)
             print(f"Server has been binded to the IP: {self._address} port: {self._port}")
+            self.start_accepting()
 
     def start_accepting(self):
         print("The server started accepting")
@@ -114,17 +113,10 @@ class Server:
             self._client_list.append(client)
             client.start()
 
-    def append_to_room_list(self, room):
-        self._room_list.append(room)
-
-    def get_room_list(self):
-        return self._room_list
-
 
 def main():
-    my_server = Server(IP_ADDRESS, PORT)
-    my_server.bind_server()
-    my_server.start_accepting()
+    my_server = Server()
+    my_server.start()
 
 
 if __name__ == '__main__':
