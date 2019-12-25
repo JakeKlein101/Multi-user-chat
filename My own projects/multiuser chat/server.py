@@ -29,38 +29,44 @@ class Message:
         return f"{self._author}: {self._content}"
 
 
-class Room:
-    def __init__(self, room_id):
-        self._client_list = []
+class Room(Thread):
+    def __init__(self, room_id, client):
+        Thread.__init__(self)
+        self._client_list = [client]
         self._room_id = room_id
+
+    def run(self):
+        pass
 
     def get_room_id(self):
         return self._room_id
 
+    def get_client_list(self):
+        return self._client_list
+
     def append_to_room(self, client):
         self._client_list.append(client)
-
-    def send_to_room_mates(self):
-        for x in self._client_list:
-            x.get_sock().send(pickle.dumps(message.generate_message()))
 
     def __str__(self):
         output = ""
         output += "The clients in this room are: "
         for x in self._client_list:
-            output += x
+            output += str(x.get_id())
             output += " -> "
+        output += f"The room id is: {self._room_id}"
         return output
 
 
 class Client(Thread):
-    def __init__(self, sock, ip, other_clients_list):
+    def __init__(self, sock, ip, other_clients_list, server):
         Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
         self._id = random.randint(0, 200000)
         self._other_clients_list = other_clients_list
         self._room_id = 0
+        self._room = None
+        self._host = server
 
     def get_id(self):
         return self._id
@@ -75,7 +81,7 @@ class Client(Thread):
             print("Connection was forcibly closed")
 
     def send_messages(self, message):
-        for x in self._other_clients_list:
+        for x in self._room.get_client_list():
             if x.get_id() != self._id:
                 x.get_sock().send(pickle.dumps(message.generate_message()))
 
@@ -84,7 +90,17 @@ class Client(Thread):
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
             message = Message(*received_content)
-            print(message)
+            if message.get_request() == 2:
+                room = Room(message.get_room_code(), self)
+                room.start()
+                self._room = room
+                self._host.update_room_list(room)
+            elif message.get_request() == 1:
+                for x in self._host.get_room_list():
+                    if x.get_room_id() == message.get_room_code():
+                        x.append_to_room(self)
+                        self._room = x
+            print(self._room)
             self.send_messages(message)
 
     def __str__(self):
@@ -99,6 +115,12 @@ class Server:
         self._room_list = []
         self._client_list = []
 
+    def update_room_list(self, room):
+        self._room_list.append(room)
+
+    def get_room_list(self):
+        return self._room_list
+
     def start(self):
             self._sock.bind((self._address, self._port))
             self._sock.listen(1)
@@ -109,7 +131,7 @@ class Server:
         print("The server started accepting")
         while True:
             client_socket, client_address = self._sock.accept()
-            client = Client(client_socket, client_address, self._client_list)
+            client = Client(client_socket, client_address, self._client_list, self)
             self._client_list.append(client)
             client.start()
 

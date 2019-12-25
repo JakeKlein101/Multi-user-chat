@@ -28,6 +28,7 @@ class Client:
         self._request_code = 0
         self._name = name
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._room_code = 0
 
     def start(self):
         self._sock.connect((IP_ADDRESS, PORT))
@@ -43,10 +44,9 @@ class Client:
             print("The server crashed")
 
     def sending(self):
-        room_code = 0
         while True:
             content = input()
-            message = Message(self._request_code, self._name, content, room_code)
+            message = Message(self._request_code, self._name, content, self._room_code)
             self._request_code = 0
             self._sock.send(pickle.dumps(message.generate_message()))
 
@@ -55,6 +55,12 @@ class Client:
         print("1 - join room")
         print("2 - create room")
         self._request_code = int(input())
+        if self._request_code == 2:
+            print("What is the id of the room you want to create?")
+            self._room_code = int(input())
+        elif self._request_code == 1:
+            print("What is the id of the room you want to join?")
+            self._room_code = int(input())
         print("Welcome to the room! you can start talking with your friends here:")
         recv_thread = Thread(target=self.receiving)
         send_thread = Thread(target=self.sending)
