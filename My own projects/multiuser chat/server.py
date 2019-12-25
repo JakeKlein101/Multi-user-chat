@@ -116,16 +116,14 @@ class Client(Thread):
             if x.get_id() != self._id:
                 x.get_sock().send(pickle.dumps(message.generate_message()))
 
-    def receive_messages(self):
+    def receive_initial_message(self):
         """
-        first receives an initial message that contains the request code and the room id that the client wants to join.
-        with that info it either creates a new room, or adds the client into the requested room.
-        after that it receives messages and routs the to the send_messages method to be sent
-        to the other clients in the room.
+        Receives the initial message the sorts the clients request.
+        It creates/puts him in the room he requested/ wanted to create.
         """
         initial_packet = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
         initial_info = Message(*initial_packet)
-        print(initial_info.get_room_code())
+        print(f"The requested room id: {initial_info.get_room_code()}")
         if initial_info.get_request() == 2:
             room = Room(initial_info.get_room_code(), self)
             self._room = room
@@ -135,6 +133,13 @@ class Client(Thread):
                 if x.get_room_id() == initial_info.get_room_code():
                     x.append_to_room(self)
                     self._room = x
+
+    def receive_messages(self):
+        """
+        receives all the messages from the client side.
+        Calls the send_messages method to send the received message to all the other clients in the room.
+        """
+        self.receive_initial_message()
         while True:
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
