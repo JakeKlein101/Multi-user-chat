@@ -2,6 +2,7 @@ import socket
 import pickle
 import sys
 from threading import Thread
+import json
 
 
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
@@ -17,9 +18,15 @@ class Message:
         self._room_code = room_code
 
     def generate_message(self):
+        """
+        :return: returns a tuple that contains all the info that needs to ne transferred.
+        """
         return tuple([self._room_code, self._request_code, self._author, self._content])
 
     def generate_initial(self):
+        """
+        :return: returns a tuple of all the info that is needed for an initial message.
+        """
         return tuple([self._room_code, self._request_code])
 
     def __str__(self):
@@ -34,10 +41,17 @@ class Client:
         self._room_code = 0
 
     def start(self):
+        """
+        connects the client to the server and initiates start_requesting.
+        """
         self._sock.connect((IP_ADDRESS, PORT))
         self.start_requesting()
 
     def receiving(self):
+        """
+        receives all the messages sent from the server. Generates a Message object for each one with tuple unpacking.
+        Then prints the received message.
+        """
         try:
             while True:
                 received = pickle.loads(self._sock.recv(BUFFER_SIZE))
@@ -47,6 +61,10 @@ class Client:
             print("The server crashed")
 
     def sending(self):
+        """
+        Takes an input from the user(the content of the message), creates a Message object for it and then generates
+        a message with the generate_message method. Then it encodes the tuple with pickle and sends it.
+        """
         while True:
             content = input()
             message = Message(self._room_code, self._request_code, self._name, content)
@@ -54,6 +72,12 @@ class Client:
             self._sock.send(pickle.dumps(message.generate_message()))
 
     def start_requesting(self):
+        """
+        1. Takes an input from the user for his request and the room code for  the room he wants to join/create.
+        2. It generates and sends the initial message with the request code and room id.
+        3. It starts and joins 2 threads for the function sending and receiving.
+        4. It joins the Threads which makes the two functions run at the same time.
+        """
         print("would you like to:")
         print("1 - join room")
         print("2 - create room")
