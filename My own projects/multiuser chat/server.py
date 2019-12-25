@@ -10,7 +10,7 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, request_code, author="", content="", room_code=0):
+    def __init__(self, room_code, request_code, author="", content=""):
         self._author = author
         self._content = content
         self._request_code = request_code
@@ -23,20 +23,16 @@ class Message:
         return self._room_code
 
     def generate_message(self):
-        return tuple([self._request_code, self._author, self._content, self._room_code])
+        return tuple([self._room_code, self._request_code, self._author, self._content])
 
     def __str__(self):
         return f"{self._author}: {self._content}"
 
 
-class Room(Thread):
+class Room:
     def __init__(self, room_id, client):
-        Thread.__init__(self)
         self._client_list = [client]
         self._room_id = room_id
-
-    def run(self):
-        pass
 
     def get_room_id(self):
         return self._room_id
@@ -62,7 +58,7 @@ class Client(Thread):
         Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
-        self._id = random.randint(0, 200000)
+        self._id = random.randint(0, 20000000)
         self._other_clients_list = other_clients_list
         self._room_id = 0
         self._room = None
@@ -88,13 +84,11 @@ class Client(Thread):
     def receive_messages(self):
         initial_packet = pickle.loads(self._client_sock.recv(BUFFER_SIZE))
         initial_info = Message(*initial_packet)
+        print(initial_info.get_room_code())
         if initial_info.get_request() == 2:
             room = Room(initial_info.get_room_code(), self)
-            room.start()
             self._room = room
             self._host.update_room_list(room)
-            for x in self._host.get_room_list():  # testing
-                print(x)
         elif initial_info.get_request() == 1:
             for x in self._host.get_room_list():
                 if x.get_room_id() == initial_info.get_room_code():
