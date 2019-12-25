@@ -2,7 +2,6 @@ import socket
 import pickle
 import sys
 from threading import Thread
-import json
 
 
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
@@ -11,17 +10,18 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, room_code, request_code, author="", content=""):
+    def __init__(self, room_code, request_code, author="", content="", choice=0):
         self._request_code = request_code
         self._author = author
         self._content = content
         self._room_code = room_code
+        self._choice = choice
 
     def generate_message(self):
         """
         :return: returns a tuple that contains all the info that needs to ne transferred.
         """
-        return tuple([self._room_code, self._request_code, self._author, self._content])
+        return tuple([self._room_code, self._request_code, self._author, self._content, self._choice])
 
     def generate_initial(self):
         """
@@ -60,6 +60,22 @@ class Client:
         except ConnectionResetError:
             print("The server crashed")
 
+    @staticmethod
+    def menu():
+        print("Welcome to the menu. Here are the available actions:")
+        print("1 - declare somebody as admin")
+        choice = int(input())
+        return choice
+
+    def handle_command(self, choice):  # needs fixing
+        if choice == 1:
+            people_in_group = pickle.loads(self._sock.recv(BUFFER_SIZE))
+            print("who do you want to make admin?")
+            for x in people_in_group:
+                print(x)
+            to_admin = input()
+            self._sock.send(to_admin.encode())
+
     def sending(self):
         """
         Takes an input from the user(the content of the message), creates a Message object for it and then generates
@@ -67,9 +83,16 @@ class Client:
         """
         while True:
             content = input()
-            message = Message(self._room_code, self._request_code, self._name, content)
-            self._request_code = 0
-            self._sock.send(pickle.dumps(message.generate_message()))
+            if content == "//":  # needs fixing
+                choice = self.menu()
+                message = Message(self._room_code, self._request_code, self._name, content, choice)
+                self._request_code = 0
+                self._sock.send(pickle.dumps(message.generate_message()))
+                self.handle_command(choice)
+            else:
+                message = Message(self._room_code, self._request_code, self._name, content)
+                self._request_code = 0
+                self._sock.send(pickle.dumps(message.generate_message()))
 
     def start_requesting(self):
         """

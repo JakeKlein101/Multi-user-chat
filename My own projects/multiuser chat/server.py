@@ -10,11 +10,15 @@ BUFFER_SIZE = 4096
 
 
 class Message:
-    def __init__(self, room_code, request_code, author="", content=""):
+    def __init__(self, room_code, request_code, author="", content="", choice=0):
         self._author = author
         self._content = content
         self._request_code = request_code
         self._room_code = room_code
+        self._choice = choice
+
+    def get_choice(self):
+        return self._choice
 
     def get_request(self):
         """
@@ -74,7 +78,7 @@ class Room:
 
 
 class Client(Thread):
-    def __init__(self, sock, ip, other_clients_list, server):
+    def __init__(self, sock, ip, other_clients_list, server, is_admin=False):
         Thread.__init__(self)
         self._client_sock = sock
         self._client_address = ip
@@ -83,6 +87,7 @@ class Client(Thread):
         self._room_id = 0
         self._room = None
         self._host = server
+        self._is_admin = is_admin
 
     def get_id(self):
         """
@@ -128,11 +133,16 @@ class Client(Thread):
             room = Room(initial_info.get_room_code(), self)
             self._room = room
             self._host.update_room_list(room)
+            self._is_admin = True
+            print(self)
         elif initial_info.get_request() == 1:
             for x in self._host.get_room_list():
                 if x.get_room_id() == initial_info.get_room_code():
                     x.append_to_room(self)
                     self._room = x
+                    print(self)
+        else:
+            print("invalid request code")
 
     def receive_messages(self):
         """
@@ -144,10 +154,18 @@ class Client(Thread):
             encoded_content = self._client_sock.recv(BUFFER_SIZE)
             received_content = pickle.loads(encoded_content)
             message = Message(*received_content)
+            print(message.get_choice())
+            if message.get_choice() != 0 and self._is_admin: # needs fixing
+                self.handle_command(message.get_choice())
             self.send_messages(message)
 
+    def handle_command(self, choice_code):  # needs fixing
+        if choice_code == 1:
+            data = tuple(self._room.get_client_list())
+            self._client_sock.send(pickle.dumps(data))
+
     def __str__(self):
-        return f"IP: {self._client_address}, ID: {self._id}"
+        return f"IP: {self._client_address}, ID: {self._id}, Is admin: {self._is_admin}"
 
 
 class Server:
