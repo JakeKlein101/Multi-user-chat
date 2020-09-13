@@ -2,6 +2,7 @@ import socket
 import pickle
 import sys
 from threading import Thread
+from datetime import datetime
 
 
 IP_ADDRESS = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
@@ -56,25 +57,9 @@ class Client:
             while True:
                 received = pickle.loads(self._sock.recv(BUFFER_SIZE))
                 received_message = Message(*received)
-                print(received_message)
+                print(datetime.now().strftime("%H:%M"), received_message)
         except ConnectionResetError:
             print("The server crashed")
-
-    @staticmethod
-    def menu():
-        print("Welcome to the menu. Here are the available actions:")
-        print("1 - declare somebody as admin")
-        choice = int(input())
-        return choice
-
-    def handle_command(self, choice):  # needs fixing
-        if choice == 1:
-            people_in_group = pickle.loads(self._sock.recv(BUFFER_SIZE))
-            print("who do you want to make admin?")
-            for x in people_in_group:
-                print(x)
-            to_admin = input()
-            self._sock.send(to_admin.encode())
 
     def sending(self):
         """
@@ -93,6 +78,22 @@ class Client:
                 message = Message(self._room_code, self._request_code, self._name, content)
                 self._request_code = 0
                 self._sock.send(pickle.dumps(message.generate_message()))
+
+    @staticmethod
+    def menu():  # working progress :)
+        print("Welcome to the menu. Here are the available actions:")
+        print("1 - declare somebody as admin")
+        choice = int(input())
+        return choice
+
+    def handle_command(self, choice):  # working progress :)
+        if choice == 1:
+            people_in_group = pickle.loads(self._sock.recv(BUFFER_SIZE))
+            print("who do you want to make admin?")
+            for x in people_in_group:
+                print(x)
+            to_admin = input()
+            self._sock.send(to_admin.encode())
 
     def start_requesting(self):
         """
@@ -123,7 +124,7 @@ class Client:
 
 
 def main():
-    print("Welcome to the 'Han'! the first global mutli - user room!")
+    print("Welcome to Jake's multi-user chat!")
     client_name = input("Please Write down your name:")
     print(f"Welcome {client_name}!")
     client = Client(client_name)
